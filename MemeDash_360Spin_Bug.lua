@@ -1,6 +1,6 @@
--- MemeDash 360 Spin Bug
--- Uses the same camera-offset pattern as MicroCam.lua:
--- remove our previous offset after the game camera updates, then apply a fresh one.
+-- MemeDash 360 Spin Bug | Roblox Mobile
+-- Mesmo botao e mesmo controlador de camera do MicroCam.lua.
+-- Troca o tremor lateral por uma rotacao continua de 360 graus.
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -15,37 +15,46 @@ end
 
 local enabled = false
 local alive = true
-local spinAngle = 0
-local previousOffset = CFrame.identity
 local bindName = "MemeDash360SpinEffect"
-local SPEED_DEGREES_PER_SECOND = 1440 -- 4 full turns per second
+local previousOffset = CFrame.identity
+local SPEED_DEGREES_PER_SECOND = 1440 -- 4 voltas por segundo
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "MemeDash360SpinControls"
+gui.Name = "MicroGlitchUI"
 gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true
 gui.DisplayOrder = 999
 gui.Parent = playerGui
 
-local toggle = Instance.new("TextButton")
-toggle.Name = "SpinToggle"
-toggle.Size = UDim2.fromOffset(100, 42)
-toggle.Position = UDim2.new(1, -116, 0, 24)
-toggle.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
-toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggle.Text = "SPIN: OFF"
-toggle.TextSize = 14
-toggle.Font = Enum.Font.GothamBold
-toggle.Parent = gui
-Instance.new("UICorner", toggle).CornerRadius = UDim.new(0, 8)
+-- Copiado do MicroCam: mesmo botao pequeno, redondo e com ponto preto.
+local button = Instance.new("ImageButton")
+button.Name = "GlitchToggle"
+button.Size = UDim2.fromOffset(26, 26)
+button.Position = UDim2.new(0.78, 0, 0.65, 0)
+button.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
+button.BackgroundTransparency = 0.35
+button.ImageTransparency = 1
+button.AutoButtonColor = true
+button.Active = true
+button.Parent = gui
 
-toggle.Activated:Connect(function()
+local round = Instance.new("UICorner")
+round.CornerRadius = UDim.new(1, 0)
+round.Parent = button
+
+local dot = Instance.new("Frame")
+dot.Name = "PositionDot"
+dot.Size = UDim2.fromOffset(3, 3)
+dot.AnchorPoint = Vector2.new(0.5, 0.5)
+dot.Position = UDim2.fromScale(0.5, 0.5)
+dot.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+dot.BorderSizePixel = 0
+dot.Active = false
+dot.ZIndex = button.ZIndex + 1
+dot.Parent = button
+
+button.Activated:Connect(function()
     enabled = not enabled
-    if enabled then
-        spinAngle = 0
-    end
-    toggle.Text = enabled and "SPIN: ON" or "SPIN: OFF"
-    toggle.BackgroundColor3 = enabled and Color3.fromRGB(25, 190, 105) or Color3.fromRGB(40, 40, 48)
+    button.BackgroundColor3 = enabled and Color3.fromRGB(25, 190, 105) or Color3.fromRGB(40, 40, 48)
 end)
 
 local function cleanup()
@@ -54,9 +63,7 @@ local function cleanup()
     pcall(function()
         RunService:UnbindFromRenderStep(bindName)
     end)
-    if gui.Parent then
-        gui:Destroy()
-    end
+    if gui.Parent then gui:Destroy() end
 end
 
 _G.MemeDash360Cleanup = cleanup
@@ -68,7 +75,7 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Last.Value + 100, func
         return
     end
 
-    -- Match MicroCam: undo only the offset we applied on the previous frame.
+    -- Mesmo esquema do MicroCam: remove apenas o offset aplicado no frame anterior.
     if previousOffset ~= CFrame.identity then
         camera.CFrame = camera.CFrame * previousOffset:Inverse()
         previousOffset = CFrame.identity
@@ -76,8 +83,9 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Last.Value + 100, func
 
     if not enabled then return end
 
-    spinAngle = (spinAngle + math.rad(SPEED_DEGREES_PER_SECOND * dt)) % (2 * math.pi)
-    previousOffset = CFrame.Angles(0, spinAngle, 0)
+    -- Aplica apenas o giro incremental do frame, sem acumular angulos absolutos.
+    local stepAngle = math.rad(SPEED_DEGREES_PER_SECOND * dt)
+    previousOffset = CFrame.Angles(0, stepAngle, 0)
     camera.CFrame = camera.CFrame * previousOffset
 end)
 
