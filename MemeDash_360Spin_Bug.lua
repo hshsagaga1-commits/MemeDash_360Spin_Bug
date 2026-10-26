@@ -1,6 +1,6 @@
 -- MemeDash 360 Spin Bug | Roblox Mobile
--- Mesmo botao e mesmo controlador de camera do MicroCam.lua.
--- Troca o tremor lateral por uma rotacao continua de 360 graus.
+-- Mantem a UI/toggle do MicroCam, mas substitui o tremor por giro real da tela.
+-- O roll usa o eixo Z da camera: a imagem gira em torno do centro, sem virar a direcao da personagem.
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -17,7 +17,8 @@ local enabled = false
 local alive = true
 local bindName = "MemeDash360SpinEffect"
 local previousOffset = CFrame.identity
-local SPEED_DEGREES_PER_SECOND = 540 -- 1,5 volta por segundo: perceptivel sem ser absurdo
+local spinAngle = 0
+local SPEED_DEGREES_PER_SECOND = 540 -- 1,5 volta por segundo
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "MicroGlitchUI"
@@ -25,7 +26,7 @@ gui.ResetOnSpawn = false
 gui.DisplayOrder = 999
 gui.Parent = playerGui
 
--- Copiado do MicroCam: mesmo botao pequeno, redondo e com ponto preto.
+-- Mesmo botao do MicroCam: pequeno, redondo, com ponto preto.
 local button = Instance.new("ImageButton")
 button.Name = "GlitchToggle"
 button.Size = UDim2.fromOffset(26, 26)
@@ -54,15 +55,14 @@ dot.Parent = button
 
 button.Activated:Connect(function()
     enabled = not enabled
+    if enabled then spinAngle = 0 end
     button.BackgroundColor3 = enabled and Color3.fromRGB(25, 190, 105) or Color3.fromRGB(40, 40, 48)
 end)
 
 local function cleanup()
     alive = false
     enabled = false
-    pcall(function()
-        RunService:UnbindFromRenderStep(bindName)
-    end)
+    pcall(function() RunService:UnbindFromRenderStep(bindName) end)
     if gui.Parent then gui:Destroy() end
 end
 
@@ -75,7 +75,7 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Last.Value + 100, func
         return
     end
 
-    -- Mesmo esquema do MicroCam: remove apenas o offset aplicado no frame anterior.
+    -- Remove o efeito anterior depois que a camera do jogo atualiza.
     if previousOffset ~= CFrame.identity then
         camera.CFrame = camera.CFrame * previousOffset:Inverse()
         previousOffset = CFrame.identity
@@ -83,9 +83,9 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Last.Value + 100, func
 
     if not enabled then return end
 
-    -- Aplica apenas o giro incremental do frame, sem acumular angulos absolutos.
-    local stepAngle = math.rad(SPEED_DEGREES_PER_SECOND * dt)
-    previousOffset = CFrame.Angles(0, stepAngle, 0)
+    spinAngle = (spinAngle + math.rad(SPEED_DEGREES_PER_SECOND * dt)) % (2 * math.pi)
+    -- Roll absoluto no eixo Z: gira a tela inteira, nao faz tremidinhas de yaw.
+    previousOffset = CFrame.Angles(0, 0, spinAngle)
     camera.CFrame = camera.CFrame * previousOffset
 end)
 
@@ -93,8 +93,6 @@ gui.Destroying:Connect(function()
     if alive then
         alive = false
         enabled = false
-        pcall(function()
-            RunService:UnbindFromRenderStep(bindName)
-        end)
+        pcall(function() RunService:UnbindFromRenderStep(bindName) end)
     end
 end)
