@@ -17,7 +17,7 @@ local enabled = false
 local alive = true
 local bindName = "MemeDash360SpinEffect"
 local previousOffset = CFrame.identity
-local SPEED_DEGREES_PER_SECOND = 1440 -- 4 voltas por segundo
+local SPEED_DEGREES_PER_SECOND = 540 -- 1,5 volta por segundo: perceptivel sem ser absurdo
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "MicroGlitchUI"
