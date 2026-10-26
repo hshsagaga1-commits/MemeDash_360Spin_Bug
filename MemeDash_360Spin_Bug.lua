@@ -1,6 +1,6 @@
 -- MemeDash 360 Spin Bug | Roblox Mobile
 -- Mantem a UI/toggle do MicroCam, mas substitui o tremor por giro real da tela.
--- O roll usa o eixo Z da camera: a imagem gira em torno do centro, sem virar a direcao da personagem.
+-- Giro horizontal de 360 graus; sem roll, para a tela nao ficar inclinada.
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -84,8 +84,8 @@ RunService:BindToRenderStep(bindName, Enum.RenderPriority.Last.Value + 100, func
     if not enabled then return end
 
     spinAngle = (spinAngle + math.rad(SPEED_DEGREES_PER_SECOND * dt)) % (2 * math.pi)
-    -- Roll absoluto no eixo Z: gira a tela inteira, nao faz tremidinhas de yaw.
-    previousOffset = CFrame.Angles(0, 0, spinAngle)
+    -- Yaw absoluto: vira a visao horizontalmente, sem inclinar a tela.
+    previousOffset = CFrame.Angles(0, spinAngle, 0)
     camera.CFrame = camera.CFrame * previousOffset
 end)
 
