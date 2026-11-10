@@ -84,6 +84,7 @@ end
 -- Esse metodo remove o tranco de auto-alinhamento SEM travar Camera.CFrame.
 local function primeNativeCameraAtStop()
     local ps = player:FindFirstChildOfClass("PlayerScripts")
+        or player:FindFirstChild("PlayerScripts")
     local playerModule = ps and ps:FindFirstChild("PlayerModule")
     local cameraModuleScript = playerModule and playerModule:FindFirstChild("CameraModule")
     if not cameraModuleScript then return false end
@@ -147,7 +148,7 @@ local function finish()
     -- CameraModule permanece em Custom desde o inicio.
     -- Sincroniza a pose que ele deve assumir no quadro seguinte ao OFF,
     -- ANTES de devolver o AutoRotate e sem escrever camera CFrame.
-    primeNativeCameraAtStop()
+    pcall(primeNativeCameraAtStop) -- a camera customizada nunca impede a limpeza
     releaseAvatar()
     controlledHumanoid, controlledRoot, originalAutoRotate = nil, nil, nil
     savedCamera, savedCameraType, savedCameraSubject = nil, nil, nil
