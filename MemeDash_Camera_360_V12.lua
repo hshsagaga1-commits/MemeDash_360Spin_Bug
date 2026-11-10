@@ -36,13 +36,12 @@ local cfg = {
     speed = 560,              -- graus por segundo
     direction = -1,
     acceleration = 0.10,      -- entrada responsiva
-    brakeTime = 0.18,         -- freada curta, nao instantanea
     releaseTime = 0.16,       -- devolucao curta para a camera nativa
 }
 
-local state = "idle"          -- idle / spinning / braking / release
+local state = "idle"          -- idle / spinning / release
 local currentSpeed = 0
-local brakeInitial, brakeClock, releaseClock = 0, 0, 0
+local releaseClock = 0
 local yaw = 0
 local controlledHumanoid, controlledRoot, originalAutoRotate
 local savedCamera, savedCameraType, savedCameraSubject
@@ -108,7 +107,7 @@ local function finish()
     savedCamera, savedCameraType, savedCameraSubject = nil, nil, nil
     relativeCamera, relativeFocus = nil, nil
     releaseCamera, releaseRootPos = nil, nil
-    currentSpeed, brakeInitial, brakeClock, releaseClock = 0, 0, 0, 0
+    currentSpeed, releaseClock = 0, 0
     uiRefresh()
 end
 
@@ -150,15 +149,9 @@ local function render(dt)
     end
 
     if h.AutoRotate then h.AutoRotate = false end
-    if state == "spinning" then
-        local goal = math.rad(cfg.speed * cfg.direction)
-        currentSpeed = currentSpeed + (goal - currentSpeed)
-            * (1 - math.exp(-dt / cfg.acceleration))
-    elseif state == "braking" then
-        brakeClock = math.min(cfg.brakeTime, brakeClock + dt)
-        currentSpeed = brakeInitial *
-            (1 - smooth01(brakeClock / cfg.brakeTime))
-    end
+    local goal = math.rad(cfg.speed * cfg.direction)
+    currentSpeed = currentSpeed + (goal - currentSpeed)
+        * (1 - math.exp(-dt / cfg.acceleration))
 
     -- Uma UNICA orientacao dirige o avatar e a camera no mesmo frame.
     -- Nada de angulos acumulados diferentes ou zoom recalculado.
@@ -178,10 +171,7 @@ local function render(dt)
     cam.CFrame = bodyYawFrame * relativeCamera
     cam.Focus = CFrame.new(bodyYawFrame:PointToWorldSpace(relativeFocus))
 
-    if state == "braking" and brakeClock >= cfg.brakeTime then
-        currentSpeed = 0
-        beginRelease()
-    end
+
 end
 
 local function start()
@@ -202,7 +192,7 @@ local function start()
     relativeCamera = reference:ToObjectSpace(cam.CFrame)
     relativeFocus = reference:PointToObjectSpace(cam.Focus.Position)
 
-    currentSpeed, brakeInitial, brakeClock, releaseClock = 0, 0, 0, 0
+    currentSpeed, releaseClock = 0, 0
     state = "spinning"
     cam.CameraType = Enum.CameraType.Scriptable
     RunService:BindToRenderStep(
@@ -213,10 +203,9 @@ end
 
 local function stop()
     if state ~= "spinning" then return end
-    brakeInitial = currentSpeed
-    brakeClock = 0
-    state = "braking"
-    uiRefresh()
+    -- OFF no mesmo toque: a rotacao do personagem para neste frame.
+    currentSpeed = 0
+    beginRelease()
 end
 
 local function toggleSpin()
@@ -224,13 +213,7 @@ local function toggleSpin()
         start()
     elseif state == "spinning" then
         stop()
-    elseif state == "braking" then
-        -- Retomada durante a freada, SEM reiniciar o yaw ou a camera.
-        state = "spinning"
-        uiRefresh()
     elseif state == "release" then
-        -- Recaptura a camera DO FRAME ATUAL; cancela o retorno sem
-        -- carregar referencia antiga ou duplicar RenderStep.
         finish()
         start()
     end
