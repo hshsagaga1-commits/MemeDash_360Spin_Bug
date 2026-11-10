@@ -360,8 +360,18 @@ uiRefresh=function()
     circle.Text="360" -- nome/texto estavel para salvar no Mover Botoes
 end
 connect(circle.Activated,toggleSpin)
--- Fallback para versoes de CameraModule que nao exportam getRotationActivated.
--- Nao captura toque: apenas observa movimento NA AREA DA CAMERA, sem joystick.
+-- O primeiro toque real na AREA DA CAMERA libera o controle NATIVO.
+-- O proprio botao 360 nao ativa isso: TouchStarted acontece ANTES do clique OFF.
+connect(UIS.TouchStarted, function(input, processed)
+    if state ~= "guarded" or processed then return end
+    local cam = workspace.CurrentCamera
+    if cam and input.Position.X > cam.ViewportSize.X * 0.40 then
+        guardManualMove = true
+    end
+end)
+
+-- Fallback para CameraModule sem getRotationActivated.
+-- Nao captura toque: somente observa input real fora do joystick.
 connect(UIS.TouchMoved, function(input, processed)
     if state ~= "guarded" or processed then return end
     local cam = workspace.CurrentCamera
