@@ -47,6 +47,7 @@ local controlledHumanoid, controlledRoot, originalAutoRotate
 local savedCamera, savedCameraType, savedCameraSubject
 local relativeCamera, relativeFocus
 local releaseCamera, releaseRootPos
+local firstFrame, firstCam, firstFocus, firstRootPos = false, nil, nil, nil
 local destroyed = false
 local connections = {}
 local uiRefresh = function() end
@@ -107,6 +108,7 @@ local function finish()
     savedCamera, savedCameraType, savedCameraSubject = nil, nil, nil
     relativeCamera, relativeFocus = nil, nil
     releaseCamera, releaseRootPos = nil, nil
+    firstFrame, firstCam, firstFocus, firstRootPos = false, nil, nil, nil
     currentSpeed, releaseClock = 0, 0
     uiRefresh()
 end
@@ -119,6 +121,7 @@ local function beginRelease()
     releaseRootPos = controlledRoot and controlledRoot.Position or Vector3.zero
     releaseClock = 0
     state = "release"
+    releaseAvatar()
     returnNativeCamera()
     uiRefresh()
 end
@@ -149,6 +152,14 @@ local function render(dt)
     end
 
     if h.AutoRotate then h.AutoRotate = false end
+    -- Quadro inicial: exatamente a mesma pose anterior ao clique.
+    if firstFrame then
+        firstFrame = false
+        local shift = root.Position - firstRootPos
+        cam.CFrame = CFrame.new(shift) * firstCam
+        cam.Focus = CFrame.new(firstFocus.Position + shift)
+        return
+    end
     local goal = math.rad(cfg.speed * cfg.direction)
     currentSpeed = currentSpeed + (goal - currentSpeed)
         * (1 - math.exp(-dt / cfg.acceleration))
@@ -192,6 +203,7 @@ local function start()
     relativeCamera = reference:ToObjectSpace(cam.CFrame)
     relativeFocus = reference:PointToObjectSpace(cam.Focus.Position)
 
+    firstFrame, firstCam, firstFocus, firstRootPos = true, cam.CFrame, cam.Focus, root.Position
     currentSpeed, releaseClock = 0, 0
     state = "spinning"
     cam.CameraType = Enum.CameraType.Scriptable
