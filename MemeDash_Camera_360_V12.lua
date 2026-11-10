@@ -1,12 +1,11 @@
 -- MemeDash Sync 360 V12 | 2026-11-10 | Delta iPhone
--- V7: camera e personagem dessicronizados; controle de distancia indevido;
--- parada e retomada com saltos. V8 elimina a distancia completamente.
--- CAMERA FIXA RELATIVA AO PERSONAGEM: captura a pose da camera APENAS
--- ao ativar. A mesma pose relativa e preservada em TODOS os frames.
--- O mesmo yaw controla o personagem e a pose da camera; sem orbitas extras.
--- FREIO: velocidade continua em 0.18s, sem corte seco.
--- Botao durante freio = cancelar freio; durante retorno = recapturar pose.
--- V5, V6 e V7 preservados. EXPERIMENTAL, nao validado dentro do jogo.
+-- Engine de giro e enquadramento baseado na V8 aprovada.
+-- 560 graus/s anti-horario; nenhuma freada do giro.
+-- A camera mantem a pose original no primeiro frame.
+-- Ao OFF, so a camera faz devolucao de 0.16s ao CameraModule.
+-- Botao circular no PlayerGui para o Mover Botoes reconhecer.
+-- Texto 360 permanece fixo para nao trocar a chave salva no editor.
+-- V8 original preservada. Teste real no iPhone ainda necessario.
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
