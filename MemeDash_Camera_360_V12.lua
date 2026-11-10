@@ -279,7 +279,7 @@ uiRefresh=function()
     if destroyed or not circle.Parent then return end
     local on=state=="spinning"
     circle.BackgroundColor3=on and Color3.fromRGB(24,192,92) or Color3.fromRGB(65,73,88)
-    circle.Text=on and "ON" or "360"
+    circle.Text="360" -- nome/texto estavel para salvar no Mover Botoes
 end
 connect(circle.Activated,toggleSpin)
 connect(gui.Destroying,function()
