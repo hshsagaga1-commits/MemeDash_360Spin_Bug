@@ -134,6 +134,8 @@ local function isCameraBeingMoved()
     return false
 end
 
+local finish -- forward declaration: beginGuard pode encerrar em erro
+
 local function beginGuard()
     local cam = workspace.CurrentCamera
     local _, root = getChar()
@@ -161,7 +163,7 @@ local function beginGuard()
     uiRefresh()
 end
 
-local function finish()
+finish = function()
     -- Limpeza real, inclusive quando PlayerGui e destruida.
     state = "idle"
     pcall(function() RunService:UnbindFromRenderStep(renderKey) end)
